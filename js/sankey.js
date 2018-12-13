@@ -1,5 +1,5 @@
 var margin = {
-    top: 1,
+    top: 40,
     right: 1,
     bottom: 6,
     left: 1
@@ -10,7 +10,7 @@ var margin = {
 
 var formatNumber = d3.format(",.0f"),
   format = function(d) {
-    return formatNumber(d) + " TWh";
+    return formatNumber(d) + " ";
   },
   color = d3.scaleOrdinal(d3.schemeCategory20);
 
@@ -49,6 +49,9 @@ d3.json("data/data.json", function(energy) {
   d3Digest();
 });
 
+var pillars_x = [];
+var pillar_names = ["Strategi","Fokusområden","Delmål", "Effektmål"];
+
 function d3Digest() {
 
   var link = links.selectAll(".link")
@@ -80,6 +83,7 @@ function d3Digest() {
     .attr("class", "node");
 
   newNode.attr("transform", function (d) {
+    pillars_x.push(d.x);
     return "translate(" + d.x + "," + d.y + ")";
   });
 
@@ -137,6 +141,39 @@ function d3Digest() {
   node.select('text').transition().duration(animDuration)
     .attr("y", function (d) {
       return d.dy / 2;
+    });
+  // console.log();
+  pillars_x = uniq(pillars_x);
+
+  pillars = nodes.selectAll(".pillar_names")
+    .data(pillar_names);
+
+  pillar = pillars.enter().append("g")
+    .attr("class", "pillar");
+
+  pillar.attr("transform", function (d,i) {
+    return "translate(" + (pillars_x[i]+sankey.nodeWidth()) + "," + -10 + ")";
+  });
+  pillar.append('text').text(function(d){return d;})
+  .attr("text-anchor", "end")
+  .attr('font-weight','bold')
+  .filter(function (d,i) {
+    return pillars_x[i] < width / 2;
+  })
+    .attr("x", -1*sankey.nodeWidth())
+    .attr("text-anchor", "start");;
+
+
+}
+
+function uniq(a) {
+    var prims = {"boolean":{}, "number":{}, "string":{}}, objs = [];
+    return a.filter(function(item) {
+        var type = typeof item;
+        if(type in prims)
+            return prims[type].hasOwnProperty(item) ? false : (prims[type][item] = true);
+        else
+            return objs.indexOf(item) >= 0 ? false : objs.push(item);
     });
 }
 
