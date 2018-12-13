@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>SKL Handlingsplan</title>
+  <link rel="stylesheet" type="text/css" href="css/stylesheet.css">
+  <!-- <link rel="stylesheet" type="text/css" href="css/sankey.css"> -->
+  <!-- <link rel="stylesheet" type="text/css" href="css/lib/bootstrap.min.css"> -->
+
+</head>
+
+<style>
+
+.node rect {
+  cursor: move;
+  fill-opacity: .9;
+  shape-rendering: crispEdges;
+}
+
+.node text {
+  pointer-events: none;
+  text-shadow: 0 1px 0 #fff;
+}
+
+.link {
+  fill: none;
+  stroke: #000;
+  stroke-opacity: .2;
+}
+
+.link:hover {
+  stroke-opacity: .5;
+}
+
+</style>
+<body>
+<!--
+<svg id="handlingsplanen_chart_area">
+</svg> -->
+
+<div id="chart"></div>
+
+</body>
+
+<!-- <script src="js/lib/jquery-3.2.1.min.js"></script> -->
+<!-- <script src="js/libraries/bootstrap/bootstrap.min.js"></script> -->
+<script src="js/lib/d3.v3.min.js"></script>
+<script src="js/sankey.js"></script>
+<!-- <script src="js/lib/d3.chart.js"></script> -->
+<!-- <script src="js/lib/d3.chart.sankey.js"></script> -->
+<script src="js/flow-diagram2.js"></script>
+<!-- <script>make_sankey()</script> -->
+</html>
+
+
+<!-- https://bocoup.com/blog/introducing-d3-chart -->
