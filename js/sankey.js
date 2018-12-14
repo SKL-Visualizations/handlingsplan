@@ -18,6 +18,10 @@ var drag_behavior = d3.drag()
                       .on("start", drag_start)
                       .on("drag", dragged);
 
+var drag_2 = d3.drag()
+                // .on('start',move_start)
+                .on('drag',move_pillar);
+
 var color_spec = {
   "goal_1" : "#97ba4c",
   "goal_2" : "#367d85",
@@ -211,11 +215,14 @@ function create_sankey() {
   pillar.append('text').text(function(d){return d;})
   .attr("text-anchor", "end")
   .attr('font-weight','bold')
+  .attr('value',function(d,i){return i})
+  .call(drag_2)
+
   .filter(function (d,i) {
     return pillars_x[i] < width / 2;
   })
     .attr("x", -1*sankey.nodeWidth())
-    .attr("text-anchor", "start");
+    .attr("text-anchor", "start")
 }
 
 function drag_start(d) {
@@ -236,7 +243,7 @@ function dragged(d){
     // console.log(d3.event);
     // console.log(d3.event.y);
   d3.select(this).attr("transform",
-      "translate(" + d.x  + "," + (
+      "translate(" + (d.x = d3.event.x)  + "," + (
               d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))
           ) + ")");
   sankey.relayout();
@@ -299,7 +306,48 @@ function toggle_about(a){
 }
 
 
+function move_pillar(x){
+  var who = this.getAttribute('value');
+  // console.log(this.getAttribute('value'));
+  var link = links.selectAll(".link")
+    .data(sankey.links());
+  var node = nodes.selectAll(".node")
+    .data(sankey.nodes());
+  node.filter(function(d){
+      // console.log(d);
+      if(d.pillar == parseInt(who)){
+        return true;
+      }
+      return false;
+    })
+    .attr("transform", function(d){
+    // return  "translate(" + (d.x = d3.event.x)  + "," + (
+    // console.log(d3.event.sourceEvent.clientX);
+    return "translate(" + (d.x = Math.max(0, Math.min(width - d.dx, d3.event.sourceEvent.clientX))) + "," + (
+              d.y
+          ) + ")";
+    });
+    sankey.relayout();
+    link.attr("d", path);
+    d3.select(this)
+        .attr("transform", function(d){
+        return "translate(" + d3.event.x + "," + (
+                  0
+              ) + ")";
+        });
+}
+
+
 window.addEventListener('click', function(e){
+
+      // sankey
+      // .nodeWidth(15)
+      // .nodePadding(10)
+      // .size([400, 400])
+      // .align('right')
+      // .layout(32);
+    // create_sankey();
+      // link.attr("d", path);
   if (document.getElementById('about_box').contains(e.target)){
     // Clicked in box
   } else{
