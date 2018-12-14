@@ -2,17 +2,50 @@ var margin = {
     top: 40,
     right: 1,
     bottom: 6,
-    left: 1
-  },
-  width = window.innerWidth - 20 - margin.left - margin.right,
-  height = 450 - margin.top - margin.bottom,
-  animDuration = 800;
+    left: 20
+  }
+var width = window.innerWidth - 20 - margin.left - margin.right;
+var height = 450 - margin.top - margin.bottom;
+var animDuration = 800;
 
-var formatNumber = d3.format(",.0f"),
-  format = function(d) {
+var formatNumber = d3.format(",.0f");
+var format = function(d) {
     return formatNumber(d) + " ";
-  },
-  color = d3.scaleOrdinal(d3.schemeCategory20);
+  };
+var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+var drag_behavior = d3.drag()
+                      .on("start", drag_start)
+                      .on("drag", dragged);
+
+var color_spec = {
+  "goal_1" : "#97ba4c",
+  "goal_2" : "#367d85",
+  "goal_3" : "#edbd00",
+  "goal_1_1" : "#97ba4c",
+  "goal_1_2" : "#97ba4c",
+  "goal_1_3" : "#97ba4c",
+  // "goal_1" : "#97ba4c",
+  "goal_2_1" : "#367d85",
+  "goal_2_2" : "#367d85",
+  "goal_2_3" : "#367d85",
+  "goal_2_4" : "#367d85",
+
+  "goal_3_1" : "#edbd00",
+  "goal_3_2" : "#edbd00",
+
+  "final_score" : "#5c5b97"
+}
+
+var info_box = d3.select('body')
+  .append('div')
+  .attr('id','info_box')
+  .classed('info_box',true)
+  .html('<h5 id="about_header" class="card-title mx-2 my-2">Nod information<span style="float:right;cursor:pointer;"><button type="button" class="close" aria-label="Close"><span onclick="toggle_infobox(1,1)" aria-hidden="true">&times;</span></button></span></h5>');
+
+var text_content =     info_box.append('p')
+        .classed('m-3',true);
+
 
 var svg = d3.select("#chart").append("svg")
   .attr("width", width + margin.left + margin.right)
@@ -20,8 +53,9 @@ var svg = d3.select("#chart").append("svg")
   .append("g")
   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-var links = svg.append("g"),
-    nodes = svg.append("g");
+var links = svg.append("g");
+var nodes = svg.append("g");
+var headers = svg.append("g");
 
 var sankey = d3.sankey()
   .nodeWidth(15)
@@ -46,13 +80,13 @@ d3.json("data/data.json", function(energy) {
     .links(energy.links)
     .layout(32);
 
-  d3Digest();
+  create_sankey();
 });
 
 var pillars_x = [];
 var pillar_names = ["Strategi","Fokusområden","Delmål", "Effektmål"];
 
-function d3Digest() {
+function create_sankey() {
 
   var link = links.selectAll(".link")
     .data(sankey.links());
@@ -61,16 +95,25 @@ function d3Digest() {
       .attr("class", "link")
       .style("stroke-width", function (d) {
         return Math.max(1, d.dy) + 'px';
+      })
+      .style('stroke',function(d){
+        // console.log(d.source.id);
+        if(d.source.id != undefined){
+          if(color_spec[d.source.id] != undefined){
+            return color_spec[d.source.id];
+          }
+        }
+        return 'darkblue';
       });
 
   newLink.append("title")
     .text(function (d) {
-      return d.source.name + " → " + d.target.name + "\n" + format(d.value);
+      return d.source.name + " → " + d.target.name;
     });
 
   link = newLink.merge(link);
 
-  link.transition().duration(animDuration)
+  link.transition()
     .attr("d", path)
     .style("stroke-width", function (d) {
       return Math.max(1, d.dy) + 'px';
@@ -85,7 +128,12 @@ function d3Digest() {
   newNode.attr("transform", function (d) {
     pillars_x.push(d.x);
     return "translate(" + d.x + "," + d.y + ")";
+  })
+  .on('click',function(d){
+      toggle_infobox(d,0);
   });
+  // .call(drag_behavior);
+
 
   node.transition().duration(animDuration)
     .attr("transform", function (d) {
@@ -107,13 +155,19 @@ function d3Digest() {
         return d.name + "\n" + format(d.value);
       });
 
+
   node.select("rect")
     .style("fill", function (d) {
+      // console.log(d.id);
+      if(color_spec[d.id] != undefined){
+        return d.color = color_spec[d.id];
+      }
       return d.color = color(d.name.replace(/ .*/, ""));
     })
     .style("stroke", function (d) {
-      return d3.rgb(d.color).darker(2);
+      return d3.rgb(d.color).darker(1);
     })
+    .style('stroke-width','0.5px')
     .transition().duration(animDuration)
       .attr("height", function (d) {
         return d.dy;
@@ -145,7 +199,7 @@ function d3Digest() {
   // console.log();
   pillars_x = uniq(pillars_x);
 
-  pillars = nodes.selectAll(".pillar_names")
+  pillars = headers.selectAll(".pillar_names")
     .data(pillar_names);
 
   pillar = pillars.enter().append("g")
@@ -161,9 +215,32 @@ function d3Digest() {
     return pillars_x[i] < width / 2;
   })
     .attr("x", -1*sankey.nodeWidth())
-    .attr("text-anchor", "start");;
+    .attr("text-anchor", "start");
+}
 
+function drag_start(d) {
+    // .subject(function(d) { return d; })
+    // .on("start", function() {
+    d3.event.sourceEvent.stopPropagation();
+    d3.event.sourceEvent.preventDefault();
+    this.parentNode.appendChild(this);
+    // .on("drag", dragmove))
+}
 
+function dragged(d){
+  // console.log(d);
+  var link = links.selectAll(".link")
+    .data(sankey.links());
+    // console.log(height-d.dy);
+    // console.log(this);
+    // console.log(d3.event);
+    // console.log(d3.event.y);
+  d3.select(this).attr("transform",
+      "translate(" + d.x  + "," + (
+              d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))
+          ) + ")");
+  sankey.relayout();
+  link.attr("d", path);
 }
 
 function uniq(a) {
@@ -181,5 +258,65 @@ function uniq(a) {
 d3.selectAll('.sankey-align').on('change', function() {
   sankey.align(this.value)
         .layout(32);
-  d3Digest();
+  create_sankey();
+});
+
+
+
+
+
+
+////////////////////////////////
+
+var info_showed = 1;
+function toggle_infobox(d,a){
+  if(a == 0){
+    d3.select('.info_box')
+      .style('display','initial');
+      // console.log(d);
+      text_content.html("<b>"+d.name + "</b><br>\n<hr style='width:90%;border: 2px solid #5c5b97; border-radius:2px;'>" + "Info Text <br>" + "");
+  } else if(a == 1){
+    d3.select('.info_box')
+      .style('display','none');
+  }
+  info_showed = a;
+}
+
+var about_showed = 1;
+function toggle_about(a){
+  if(a == 0){
+    d3.select(".about_box")
+      .style("display","initial");
+    d3.select(".inner_content")
+      .classed("blurredElement",true);
+  } else if(a == 1) {
+    d3.select(".about_box")
+      .style("display","none");
+    d3.select(".inner_content")
+      .classed("blurredElement",false);
+  }
+  about_showed = a;
+}
+
+
+window.addEventListener('click', function(e){
+  if (document.getElementById('about_box').contains(e.target)){
+    // Clicked in box
+  } else{
+    // Clicked outside the box
+    if(!document.getElementById('about_tog').contains(e.target) && about_showed == 0){
+      toggle_about(1);
+    }
+  }
+  if (document.getElementById('info_box').contains(e.target)){
+    // Clicked in box
+  } else{
+    // Clicked outside the box
+    if(info_showed == 2){
+      toggle_infobox("",1);
+    }
+    if(info_showed == 0){
+      info_showed =2;
+    }
+  }
 });

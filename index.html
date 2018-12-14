@@ -2,26 +2,46 @@
 <html>
 <head>
   <link rel="stylesheet" type="text/css" href="css/sankey.css">
+  <link rel="stylesheet" type="text/css" href="css/lib/bootstrap.min.css">
+
   <meta charset="utf-8">
   <title>Handlingsplan</title>
 </head>
 
 <body>
+  <div class="inner_content">
+  <div id="nav_bar_top" >
+    <nav class="navbar navbar-expand-sm navbar-dark py-0 px-0">
+      <a class="col-3 navbar-brand mx-0" href="http://skoldigiplan.se">#skolDigiplan - Handlingsplan</a>
+      <div class="collapse navbar-collapse" style="height:7vh;">
+        <ul class="navbar-nav mr-auto"> <!-- This must be here -->
+        </ul>
+        <a target="_blank" id="about_tog"  class="mx-2" style="cursor:pointer;" onclick="toggle_about(0)" >
+          <img src="resources/help-circle.svg"/>
+        </a>
+      </div>
+  </div>
 
-  <div id="chart"></div>
+  <div id="chart">
+  </div>
 
-  <!-- <br/> -->
-
-  <!-- <div align="center">
-    <b>Layout alignment: </b>
-    <input class="sankey-align" type="radio" name="sankey-align" value="left"> Left &nbsp;
-    <input class="sankey-align" type="radio" name="sankey-align" value="center"> Center &nbsp;
-    <input class="sankey-align" type="radio" name="sankey-align" value="right"> Right &nbsp;
-    <input class="sankey-align" type="radio" name="sankey-align" value="justify" checked="checked"> Justify &nbsp;
-  </div> -->
+</div>
+  <div id="about_box" class="about_box mx-2 my-2">
+    <h5 id="about_header" class="card-title mx-2 my-2">Om handlingsplanen<span style="float:right;cursor:pointer;"><button type="button" class="close" aria-label="Close"><span onclick="toggle_about(1)"aria-hidden="true">&times;</span></button></span></h5>
+    <hr>
+    <p class='mx-2'>
+    Här skriver vi lite information om detta projekt samt handlingsplanen
+    </p>
+    <span class="mx-1" style="font-size:10px;"><a target="_blank" href="http://www.victorkesten.com">Victor Kesten</a></span>
+    <img class="my-1" src="resources/SKL_logga.png"/ style="position:absolute;width:15%; bottom:0; right:27%;">
+    <img src="resources/känneteckenskoldigiplan.png"/ href="http://skoldigiplan.se" style="margin-left:3%;width:25%;bottom:0; right:0; position:absolute;">
+  </div>
+  <script src="js/lib/jquery-3.2.1.min.js"></script>
 
   <script src="js/lib/d3.v4.min.js"></script>
   <script src="js/lib/d3-sankey.js"></script>
+  <script src="js/lib/bootstrap/bootstrap.min.js"></script>
+
   <script src="js/sankey.js"></script>
 
 
