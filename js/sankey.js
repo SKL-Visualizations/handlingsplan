@@ -78,7 +78,7 @@ var path = sankey.link();
 //http://bl.ocks.org/FabricioRHS/80ef58d4390b06305c91fdc831844009
 //https://gist.github.com/d3noob/9bd82617061e04ad9540
 //https://bl.ocks.org/d3noob/d7800f34062b116f9ec0588f2e85e549
-d3.json("data/data.json", function(energy) {
+d3.json("data/data_new.json", function(energy) {
   sankey
     .nodes(energy.nodes)
     .links(energy.links)
@@ -135,7 +135,10 @@ function create_sankey() {
   })
   .on('click',function(d){
       toggle_infobox(d,0);
-  });
+  })
+  //http://bl.ocks.org/ropeladder/83915942ac42f17c087a82001418f2ee
+  //https://blockbuilder.org/ropeladder/83915942ac42f17c087a82001418f2ee
+  .on("dblclick",function(d){ alert("node was double clicked"); });
   // .call(drag_behavior);
 
 
