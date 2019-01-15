@@ -22,6 +22,9 @@ var drag_2 = d3.drag()
                 // .on('start',move_start)
                 .on('drag',move_pillar);
 
+                var cc = clickcancel();
+
+
 var color_spec = {
   "goal_1" : "#97ba4c",
   "goal_2" : "#367d85",
@@ -61,6 +64,9 @@ var links = svg.append("g");
 var nodes = svg.append("g");
 var headers = svg.append("g");
 
+var nnodes;
+var llinks;
+
 var sankey = d3.sankey()
   .nodeWidth(15)
   .nodePadding(10)
@@ -78,13 +84,73 @@ var path = sankey.link();
 //http://bl.ocks.org/FabricioRHS/80ef58d4390b06305c91fdc831844009
 //https://gist.github.com/d3noob/9bd82617061e04ad9540
 //https://bl.ocks.org/d3noob/d7800f34062b116f9ec0588f2e85e549
-d3.json("data/data_new.json", function(energy) {
-  sankey
-    .nodes(energy.nodes)
-    .links(energy.links)
-    .layout(32);
 
-  create_sankey();
+// Set up dictionary of neighbors
+var node2neighbors = {};
+
+
+function make_sankey(nodes_,links_){
+
+  var nodez = [];
+  var linkz = [];
+  for(var i = 0; i < nodes_.length; i++){
+    var obj = {};
+    obj.name = nodes_[i].name;
+    obj.id = nodes_[i].id;
+    obj.pillar = nodes_[i].pillar;
+    obj.click = nodes_[i].click;
+    obj.mouseover = nodes_[i].mouseover;
+    obj.target_source = nodes_[i].target_source;
+    nodez.push(obj);
+  }
+  for(var i = 0; i < links_.length; i++){
+    var obj = {};
+    obj.source = links_[i].source;
+    obj.value = links_[i].value;
+    obj.target = links_[i].target;
+    linkz.push(obj);
+  }
+  var json = {
+    "nodes" : nodez,
+    "links" : linkz
+  };
+
+  for (var i =0; i < json.nodes.length; i++){
+  	// var name = json.nodes[i].name;
+    var name = json.nodes[i].target_source;
+    // console.log(name);
+
+  	node2neighbors[name] = json.links.filter(function(d){
+      // console.log(d.target);
+  			return d.source == name || d.target == name;
+  		}).map(function(d){
+  			return d.source == name ? d.target : d.source;
+  		});
+  }
+  // console.log(node2neighbors);
+
+  console.log(json);
+    // d3.json("data/del.json", function(energy) {
+    // nnodes = nodez;
+    // llinks = links;
+      sankey
+        .nodes(json.nodes)
+        .links(json.links)
+        // .align('right')
+        .layout(32);
+      create_sankey();
+}
+
+
+
+d3.json("data/data_new.json", function(energy) {
+  nnodes = energy.nodes;
+  llinks = energy.links;
+
+
+  // console.log(flatten(energy.nodes));
+  // console.log(sankey.nodes());
+  make_sankey(energy.nodes, energy.links);
 });
 
 var pillars_x = [];
@@ -94,6 +160,8 @@ function create_sankey() {
 
   var link = links.selectAll(".link")
     .data(sankey.links());
+
+
 
   var newLink = link.enter().append("path")
       .attr("class", "link")
@@ -108,6 +176,10 @@ function create_sankey() {
           }
         }
         return 'darkblue';
+      })
+      .attr('id', function(d){
+        // console.log(d);
+        return 'link_' + d.source.target_source;
       });
 
   newLink.append("title")
@@ -133,14 +205,47 @@ function create_sankey() {
     pillars_x.push(d.x);
     return "translate(" + d.x + "," + d.y + ")";
   })
-  .on('click',function(d){
-      toggle_infobox(d,0);
-  })
-  //http://bl.ocks.org/ropeladder/83915942ac42f17c087a82001418f2ee
-  //https://blockbuilder.org/ropeladder/83915942ac42f17c087a82001418f2ee
-  .on("dblclick",function(d){ alert("node was double clicked"); });
+  .call(cc);
+
   // .call(drag_behavior);
 
+  cc.on('click', function(d, index) {
+    toggle_infobox(d, 0);
+  });
+  cc.on('dblclick', function(d, index) {
+
+    // Determine if current node's neighbors and their links are visible
+       var active   = d.active ? false : true // toggle whether node is active
+       , newOpacity = active ? 0 : 1;
+
+       // Extract node's name and the names of its neighbors
+       var name     = d.target_source
+       , neighbors  = node2neighbors[name];
+       // console.log(neighbors);
+       if(name == 0 && neighbors.length!=4){
+         neighbors.unshift(0);
+       }
+       // Hide the neighbors and their links
+       rec(neighbors, newOpacity);
+       // Update whether or not the node is active
+       d.active = active;  });
+
+   function rec(neighbors,newOpacity){
+     // console.log(neighbors);
+     // if()
+     for (var i = 1; i < neighbors.length; i++){
+       d3.select("#node_" + neighbors[i]).transition().style("opacity", newOpacity);
+       d3.selectAll("#link_" + neighbors[i]).transition().style("opacity", newOpacity);
+       var neg = node2neighbors[neighbors[i]];
+       for(var j = 0; j < neg.length; j++){
+         if(neg[j] > neighbors[i]){
+           // console.log(neg);
+           j == neg.length;
+           rec(neg,newOpacity);
+         }
+       }
+     }
+   }
 
   node.transition().duration(animDuration)
     .attr("transform", function (d) {
@@ -179,6 +284,12 @@ function create_sankey() {
       .attr("height", function (d) {
         return d.dy;
       });
+
+
+    node.attr('id', function(d){
+      // console.log(d);
+      return 'node_' + d.target_source;
+    });
 
   newNode.select("text")
     .attr("dy", ".35em")
@@ -225,7 +336,27 @@ function create_sankey() {
     return pillars_x[i] < width / 2;
   })
     .attr("x", -1*sankey.nodeWidth())
-    .attr("text-anchor", "start")
+    .attr("text-anchor", "start");
+
+    covfefe();
+
+}
+function covfefe(){
+  console.log(sankey.links());
+}
+
+// Returns a list of all nodes under the root.
+function flatten(root) {
+  var nodes = [], i = 0;
+
+  function recurse(node) {
+    if (node.targetLinks) node.targetLinks.forEach(recurse);
+    if (!node.id) node.id = ++i;
+    nodes.push(node);
+  }
+
+  recurse(root);
+  return nodes;
 }
 
 function drag_start(d) {
@@ -268,12 +399,8 @@ function uniq(a) {
 d3.selectAll('.sankey-align').on('change', function() {
   sankey.align(this.value)
         .layout(32);
-  create_sankey();
+  make_sankey(nnodes, llinks);
 });
-
-
-
-
 
 
 ////////////////////////////////
@@ -307,6 +434,9 @@ function toggle_about(a){
   }
   about_showed = a;
 }
+
+
+var removed_list = [];
 
 
 function move_pillar(x){
@@ -371,3 +501,57 @@ window.addEventListener('click', function(e){
     }
   }
 });
+
+
+function clickcancel() {
+  // we want to a distinguish single/double click
+  // details http://bl.ocks.org/couchand/6394506
+  var dispatcher = d3.dispatch('click', 'dblclick');
+  function cc(selection) {
+      var down, tolerance = 5, last, wait = null, args;
+      // euclidean distance
+      function dist(a, b) {
+          return Math.sqrt(Math.pow(a[0] - b[0], 2), Math.pow(a[1] - b[1], 2));
+      }
+      selection.on('mousedown', function() {
+          down = d3.mouse(document.body);
+          last = +new Date();
+          args = arguments;
+      });
+      selection.on('mouseup', function() {
+          if (dist(down, d3.mouse(document.body)) > tolerance) {
+              return;
+          } else {
+              if (wait) {
+                  window.clearTimeout(wait);
+                  wait = null;
+                  dispatcher.apply("dblclick", this, args);
+              } else {
+                  wait = window.setTimeout((function() {
+                      return function() {
+                          dispatcher.apply("click", this, args);
+                          wait = null;
+                      };
+                  })(), 300);
+              }
+          }
+      });
+  };
+  // Copies a variable number of methods from source to target.
+  var d3rebind = function(target, source) {
+    var i = 1, n = arguments.length, method;
+    while (++i < n) target[method = arguments[i]] = d3_rebind(target, source, source[method]);
+    return target;
+  };
+
+  // Method is assumed to be a standard D3 getter-setter:
+  // If passed with no arguments, gets the value.
+  // If passed with arguments, sets the value and returns the target.
+  function d3_rebind(target, source, method) {
+    return function() {
+      var value = method.apply(source, arguments);
+      return value === source ? target : value;
+    };
+  }
+  return d3rebind(cc, dispatcher, 'on');
+}
