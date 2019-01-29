@@ -3,7 +3,6 @@
 <head>
   <link rel="stylesheet" type="text/css" href="css/sankey.css">
   <link rel="stylesheet" type="text/css" href="css/lib/bootstrap.min.css">
-
   <meta charset="utf-8">
   <title>Handlingsplan</title>
 </head>
@@ -13,9 +12,11 @@
   <div id="nav_bar_top" >
     <nav class="navbar navbar-expand-sm navbar-dark py-0 px-0">
       <a class="col-3 navbar-brand mx-0" href="http://skoldigiplan.se">#skolDigiplan - Handlingsplan</a>
+
       <div class="collapse navbar-collapse" style="height:7vh;">
         <ul class="navbar-nav mr-auto"> <!-- This must be here -->
         </ul>
+        <a class="col-auto navbar-brand mx-0 tillbaka" style="color:white; background-color:orange;" onclick="home()">Strategi</a>
         <a target="_blank" id="about_tog"  class="mx-2" style="cursor:pointer;" onclick="toggle_about(0)" >
           <img src="resources/help-circle.svg"/>
         </a>

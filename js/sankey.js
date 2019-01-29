@@ -22,7 +22,7 @@ var drag_2 = d3.drag()
                 // .on('start',move_start)
                 .on('drag',move_pillar);
 
-                var cc = clickcancel();
+var cc = clickcancel();
 
 
 var color_spec = {
@@ -42,6 +42,12 @@ var color_spec = {
   "goal_3_2" : "#edbd00",
 
   "final_score" : "#5c5b97"
+}
+
+var color_spec_2 = {
+  1 : "#97ba4c",
+  2 : "#367d85",
+  3 : "#edbd00"
 }
 
 var info_box = d3.select('body')
@@ -68,10 +74,10 @@ var nnodes;
 var llinks;
 
 var sankey = d3.sankey()
-  .nodeWidth(15)
-  .nodePadding(10)
-  .size([width, height])
-  .align('right');
+    .nodeWidth(15)
+    .nodePadding(10)
+    .size([width, height])
+    .align('right');
 
 var path = sankey.link();
 //https://bl.ocks.org/vasturiano/b0b14f2e58fdeb0da61e62d51c649908
@@ -87,7 +93,7 @@ var path = sankey.link();
 
 // Set up dictionary of neighbors
 var node2neighbors = {};
-
+var select_screen = 0;
 
 function make_sankey(nodes_,links_){
 
@@ -142,26 +148,54 @@ function make_sankey(nodes_,links_){
 }
 
 
+function home() {
+  select_screen = 0;
+  d3.json("data/main.json", function(energy) {
 
-d3.json("data/data_new.json", function(energy) {
+    nnodes = energy.nodes;
+    llinks = energy.links;
+    // console.log(flatten(energy.nodes));
+    // console.log(sankey.nodes());
+    make_sankey(energy.nodes, energy.links);
+  });
+}
+
+function clicked_on_delmal(d){
+  // Clear current sankey.
+  // Draw new sankey.
+  select_screen = d;
+  // console.log(d);
+  d3.json("data/goals/"+d+".json", function(energy) {
+
+    nnodes = energy.nodes;
+    llinks = energy.links;
+    // console.log(flatten(energy.nodes));
+    // console.log(sankey.nodes());
+    make_sankey(energy.nodes, energy.links);
+  });
+}
+
+
+
+// d3.json("data/data_new.json", function(energy) {
+d3.json("data/main.json", function(energy) {
+
   nnodes = energy.nodes;
   llinks = energy.links;
-
-
   // console.log(flatten(energy.nodes));
   // console.log(sankey.nodes());
   make_sankey(energy.nodes, energy.links);
 });
 
 var pillars_x = [];
-var pillar_names = ["Strategi","Fokusområden","Delmål", "Effektmål"];
+var pillar_names = ["Strategi","Fokusområden","Delmål", "Effektmål", "Resultat", "Aktivitet",  "Förutsättningar"];
 
 function create_sankey() {
 
   var link = links.selectAll(".link")
     .data(sankey.links());
 
-
+  link.exit().remove();
 
   var newLink = link.enter().append("path")
       .attr("class", "link")
@@ -170,11 +204,27 @@ function create_sankey() {
       })
       .style('stroke',function(d){
         // console.log(d.source.id);
-        if(d.source.id != undefined){
-          if(color_spec[d.source.id] != undefined){
-            return color_spec[d.source.id];
+        var s = parseInt(select_screen);
+        console.log(s);
+        if(s != 0){
+          console.log(s);
+          if(s >= 30){
+            console.log(s);
+            return color_spec_2[3];
+          } else if (s >= 20){
+            return color_spec_2[2];
+          } else{
+            return color_spec_2[1];
+          }
+        } else {
+          // console.log("fafafa");
+          if(d.source.id != undefined){
+            if(color_spec[d.source.id] != undefined){
+              return color_spec[d.source.id];
+            }
           }
         }
+
         return 'darkblue';
       })
       .attr('id', function(d){
@@ -193,10 +243,35 @@ function create_sankey() {
     .attr("d", path)
     .style("stroke-width", function (d) {
       return Math.max(1, d.dy) + 'px';
+    })
+    .style('stroke',function(d){
+      // console.log(d.source.id);
+      var s = parseInt(select_screen);
+      console.log(s);
+      if(s != 0){
+        console.log(s);
+        if(s >= 30){
+          console.log(s);
+          return color_spec_2[3];
+        } else if (s >= 20){
+          return color_spec_2[2];
+        } else{
+          return color_spec_2[1];
+        }
+      } else {
+        if(d.source.id != undefined){
+          if(color_spec[d.source.id] != undefined){
+            return color_spec[d.source.id];
+          }
+        }
+      }
+      return 'darkblue';
     });
 
   var node = nodes.selectAll(".node")
     .data(sankey.nodes());
+
+    node.exit().remove();
 
   var newNode = node.enter().append("g")
     .attr("class", "node");
@@ -213,7 +288,6 @@ function create_sankey() {
     toggle_infobox(d, 0);
   });
   cc.on('dblclick', function(d, index) {
-
     // Determine if current node's neighbors and their links are visible
        var active   = d.active ? false : true // toggle whether node is active
        , newOpacity = active ? 0 : 1;
@@ -228,7 +302,18 @@ function create_sankey() {
        // Hide the neighbors and their links
        rec(neighbors, newOpacity);
        // Update whether or not the node is active
-       d.active = active;  });
+       d.active = active;
+    if(select_screen < 10){
+      // console.log(d);
+      var id = d.id.split('_')[1];
+      var id_x =   d.id.split('_')[2];
+      if(id_x != undefined){
+        id = id + '' + id_x;
+        clicked_on_delmal(id);
+      }
+      color_change_deep();
+    }
+   });
 
    function rec(neighbors,newOpacity){
      // console.log(neighbors);
@@ -270,11 +355,33 @@ function create_sankey() {
 
   node.select("rect")
     .style("fill", function (d) {
-      // console.log(d.id);
-      if(color_spec[d.id] != undefined){
-        return d.color = color_spec[d.id];
+      // console.log(d);
+      var s = parseInt(select_screen);
+
+      // console.log(s);
+      // console.log(d.name.replace(/ .*/, ""));
+      if(s != 0){
+        // console.log(s);
+        if(s >= 30){
+          // console.log(s);
+          return d.color = color_spec_2[3];
+        } else if (s >= 20){
+          return d.color = color_spec_2[2];
+        } else{
+          return d.color = color_spec_2[1];
+        }
+      } else {
+        if(color_spec[d.id] != undefined){
+          return d.color = color_spec[d.id];
+        }
+        return d.color = 'darkblue';
       }
-      return d.color = color(d.name.replace(/ .*/, ""));
+      // console.log("fafafa");
+      // if(d.source.id != undefined){
+      //   if(color_spec[d.source.id] != undefined){
+      //     return color_spec[d.source.id];
+      //   }
+      // }
     })
     .style("stroke", function (d) {
       return d3.rgb(d.color).darker(1);
@@ -337,27 +444,9 @@ function create_sankey() {
   })
     .attr("x", -1*sankey.nodeWidth())
     .attr("text-anchor", "start");
-
-    covfefe();
-
-}
-function covfefe(){
-  console.log(sankey.links());
 }
 
-// Returns a list of all nodes under the root.
-function flatten(root) {
-  var nodes = [], i = 0;
 
-  function recurse(node) {
-    if (node.targetLinks) node.targetLinks.forEach(recurse);
-    if (!node.id) node.id = ++i;
-    nodes.push(node);
-  }
-
-  recurse(root);
-  return nodes;
-}
 
 function drag_start(d) {
     // .subject(function(d) { return d; })
@@ -395,12 +484,36 @@ function uniq(a) {
     });
 }
 
-// Radio button change
-d3.selectAll('.sankey-align').on('change', function() {
-  sankey.align(this.value)
-        .layout(32);
-  make_sankey(nnodes, llinks);
-});
+
+function color_change_deep(){
+  // console.log(xa);
+  // if(d.active){
+
+    var node = nodes.selectAll(".node")
+      .data(sankey.nodes());
+    node.filter(function(d){
+      if(d.active){
+        return true;
+      }
+      return false;
+      })
+      .select('rect')
+      .style('fill','black');
+
+    node.filter(function(d){
+      if(d.active){
+        return false;
+      }
+      return true;
+      })
+      .select('rect')
+      .style('fill',function(d){return d.color;});
+    // d3.selectAll(nodes)
+    //   .append()
+    //   .enter()
+    //   .style('fill','black');
+  // }
+}
 
 
 ////////////////////////////////
@@ -434,10 +547,6 @@ function toggle_about(a){
   }
   about_showed = a;
 }
-
-
-var removed_list = [];
-
 
 function move_pillar(x){
   var who = this.getAttribute('value');
@@ -503,6 +612,8 @@ window.addEventListener('click', function(e){
 });
 
 
+
+// Dbl Click rebind + click.
 function clickcancel() {
   // we want to a distinguish single/double click
   // details http://bl.ocks.org/couchand/6394506
