@@ -6,24 +6,24 @@
       "target_source" : 0
     },
     {
-      "name" : "Fokusområde 1",
-      "id" : "goal_1",
-      "target_source" : 1
+        "name":"Digital kompetens",
+        "id":"goal_1",
+        "target_source":1
     },
     {
-      "name" : "Fokusområde 2",
-      "id" : "goal_2",
-      "target_source" : 2
+        "name":"Likvärdig tillgång och användning",
+        "id":"goal_2",
+        "target_source":2
     },
     {
-      "name" : "Fokusområde 3",
-      "id" : "goal_3",
-      "target_source" : 3
+        "name":"Forskning och uppföljning",
+        "id":"goal_3",
+        "target_source":3
     },
     {
-      "name" : "Delmål 1.1",
-      "id" : "goal_1_1",
-      "target_source" : 4
+        "name":"Delmål 1.1",
+        "id":"goal_1_1",
+        "target_source":4
     },
     {
       "name" : "Delmål 1.2",

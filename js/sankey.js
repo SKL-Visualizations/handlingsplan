@@ -165,6 +165,7 @@ function clicked_on_delmal(d){
   // Draw new sankey.
   select_screen = d;
   // console.log(d);
+  // console.log(d);
   d3.json("data/goals/"+d+".json", function(energy) {
 
     nnodes = energy.nodes;
@@ -188,8 +189,8 @@ d3.json("data/main.json", function(energy) {
 });
 
 var pillars_x = [];
-var pillar_names = ["Strategi","Fokusområden","Delmål", "Effektmål", "Resultat", "Aktivitet",  "Förutsättningar"];
-
+var pillar_names = ["Strategi","Fokusområden","Delmål"];
+var pillar_names2 = [ "Effektmål", "Resultat", "Aktivitet",  "Förutsättningar"];
 function create_sankey() {
 
   var link = links.selectAll(".link")
@@ -295,7 +296,7 @@ function create_sankey() {
        // Extract node's name and the names of its neighbors
        var name     = d.target_source
        , neighbors  = node2neighbors[name];
-       // console.log(neighbors);
+       console.log(neighbors);
        if(name == 0 && neighbors.length!=4){
          neighbors.unshift(0);
        }
@@ -321,6 +322,15 @@ function create_sankey() {
      for (var i = 1; i < neighbors.length; i++){
        d3.select("#node_" + neighbors[i]).transition().style("opacity", newOpacity);
        d3.selectAll("#link_" + neighbors[i]).transition().style("opacity", newOpacity);
+       if( newOpacity == 1){
+         d3.select("#node_" + neighbors[i]).transition().style("display", 'initial');
+         d3.selectAll("#link_" + neighbors[i]).transition().style("display", 'initial');
+
+       } else {
+         d3.select("#node_" + neighbors[i]).transition().style("display", 'none');
+         d3.selectAll("#link_" + neighbors[i]).transition().style("display", 'none');
+       }
+
        var neg = node2neighbors[neighbors[i]];
        for(var j = 0; j < neg.length; j++){
          if(neg[j] > neighbors[i]){
@@ -422,10 +432,19 @@ function create_sankey() {
       return d.dy / 2;
     });
   // console.log();
+  // pillars.exit().remove();
+
   pillars_x = uniq(pillars_x);
 
-  pillars = headers.selectAll(".pillar_names")
-    .data(pillar_names);
+  d3.selectAll('.pillar').remove();
+
+  var pillars = headers.selectAll(".pillar_names")
+    .data(function(d){
+      if(select_screen != 0){
+        return pillar_names2;
+      }
+      return pillar_names;
+    });
 
   pillar = pillars.enter().append("g")
     .attr("class", "pillar");
@@ -523,6 +542,17 @@ function toggle_infobox(d,a){
   if(a == 0){
     d3.select('.info_box')
       .style('display','initial');
+      console.log(d);
+      var name = d.target_source;
+      var f = false;
+      var stringer = "";
+
+      while(!name.match('0')){
+
+      }
+      console.log(name);
+      console.log(node2neighbors[name]);
+
       // console.log(d);
       text_content.html("<b>"+d.name + "</b><br>\n<hr style='width:90%;border: 2px solid #5c5b97; border-radius:2px;'>" + "Info Text <br>" + "");
   } else if(a == 1){
